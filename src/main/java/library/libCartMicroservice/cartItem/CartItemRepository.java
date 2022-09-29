@@ -1,4 +1,4 @@
-package cartItem;
+package library.libCartMicroservice.cartItem;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

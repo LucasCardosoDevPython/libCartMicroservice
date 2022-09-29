@@ -1,15 +1,16 @@
-package cart.v1;
+package library.libCartMicroservice.cart.v1;
 
 
-import book.BookRepository;
-import client.ClientRepository;
-import cart.Cart;
-import cart.CartRepository;
-import cart.CartRequestDTO;
-import cart.CartResponseDTO;
-import cartItem.CartItem;
-import cartItem.CartItemDTO;
-import cartItem.CartItemRepository;
+import library.libCartMicroservice.book.BookRepository;
+import library.libCartMicroservice.cart.Cart;
+import library.libCartMicroservice.cart.CartRepository;
+import library.libCartMicroservice.cart.CartRequestDTO;
+import library.libCartMicroservice.cart.CartResponseDTO;
+import library.libCartMicroservice.cartItem.CartItem;
+import library.libCartMicroservice.cartItem.CartItemRepository;
+import library.libCartMicroservice.cartItem.CartItemRequestDTO;
+import library.libCartMicroservice.cartItem.CartItemResponseDTO;
+import library.libCartMicroservice.client.ClientRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,8 @@ public class CartServiceImplementation implements CartService{
 
     private CartRepository carts;
     private CartItemRepository items;
-    private ClientRepository clients;
     private BookRepository books;
+    private ClientRepository clients;
 
     private double loadCartTotal(Cart cart){
         double total = 0;
@@ -42,10 +43,10 @@ public class CartServiceImplementation implements CartService{
     }
 
     public CartResponseDTO toCartResponseDTO(Cart cart){
-        LinkedList<CartItemDTO> items;
+        LinkedList<CartItemResponseDTO> items;
         boolean done;
         done = cart.getDone() != 0;
-        items = new LinkedList<CartItemDTO>();
+        items = new LinkedList<CartItemResponseDTO>();
         for(CartItem i: cart.getCartItems()){
             items.add(toItemDTO(i));
         }
@@ -71,22 +72,22 @@ public class CartServiceImplementation implements CartService{
                 .tranDate(LocalDate.now())
                 .cartItems(new LinkedList<CartItem>())
                 .build();
-        for(CartItemDTO i: inDTO.getItems()){
+        for(CartItemRequestDTO i: inDTO.getItems()){
             cart.getCartItems().add(this.fromItemDTO(i, cart));
         };
         return cart;
     }
 
-    public CartItemDTO toItemDTO(CartItem item){
-        return new CartItemDTO(
+    public CartItemResponseDTO toItemDTO(CartItem item){
+        return new CartItemResponseDTO(
                 books.findBookById(item.getBook()),
                 item.getQuantity()
         );
     }
 
-    private CartItem fromItemDTO(CartItemDTO itemDTO, Cart cart){
+    private CartItem fromItemDTO(CartItemRequestDTO itemDTO, Cart cart){
         return CartItem.builder()
-                .book(itemDTO.getBook().getIsbn())
+                .book(itemDTO.getBookId())
                 .quantity(itemDTO.getQuantity())
                 .cart(cart)
                 .build();

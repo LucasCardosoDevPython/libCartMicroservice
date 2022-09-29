@@ -1,4 +1,4 @@
-package client;
+package library.libCartMicroservice.client;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

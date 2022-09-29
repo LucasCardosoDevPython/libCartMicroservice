@@ -1,7 +1,7 @@
-package cart;
+package library.libCartMicroservice.cart;
 
-import cartItem.CartItemDTO;
-import client.ClientDTO;
+import library.libCartMicroservice.cartItem.CartItemResponseDTO;
+import library.libCartMicroservice.client.ClientDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +18,6 @@ public class CartResponseDTO {
     private ClientDTO client;
     private boolean done;
     private LocalDate tranDate;
-    private List<CartItemDTO> items;
+    private List<CartItemResponseDTO> items;
     private double total;
 }

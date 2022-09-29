@@ -6,7 +6,7 @@ CREATE TABLE cart(
 	trans_date DATE NOT NULL,
 	done NUMBER (1) CHECK(done = 0 OR done = 1),
 	PRIMARY KEY (id),
-	FOREIGN KEY (client_id) REFERENCES client(id)
+	FOREIGN KEY (client_id) REFERENCES libOnboardingClient.client(id)
 );
 
 CREATE SEQUENCE cart_item_id_generator;
@@ -17,6 +17,6 @@ CREATE TABLE cart_item(
 	book_id CHAR (13) NOT NULL,
 	quantity INTEGER NOT NULL,
 	PRIMARY KEY (id),
-	FOREIGN KEY (book_id) REFERENCES book(isbn),
+	FOREIGN KEY (book_id) REFERENCES libOnboardingBook.book(isbn),
 	FOREIGN KEY (cart_id) REFERENCES cart(id)
 );

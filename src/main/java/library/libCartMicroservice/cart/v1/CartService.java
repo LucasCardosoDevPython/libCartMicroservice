@@ -1,8 +1,8 @@
-package cart.v1;
+package library.libCartMicroservice.cart.v1;
 
-import cart.Cart;
-import cart.CartRequestDTO;
-import cart.CartResponseDTO;
+import library.libCartMicroservice.cart.Cart;
+import library.libCartMicroservice.cart.CartRequestDTO;
+import library.libCartMicroservice.cart.CartResponseDTO;
 
 import java.util.List;
 

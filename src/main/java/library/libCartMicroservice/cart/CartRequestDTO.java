@@ -1,6 +1,6 @@
-package cart;
+package library.libCartMicroservice.cart;
 
-import cartItem.CartItemDTO;
+import library.libCartMicroservice.cartItem.CartItemRequestDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,5 +15,5 @@ import java.util.List;
 public class CartRequestDTO {
     private Integer clientId;
     private boolean done;
-    private List<CartItemDTO> items;
+    private List<CartItemRequestDTO> items;
 }

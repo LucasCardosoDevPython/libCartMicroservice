@@ -1,6 +1,6 @@
-package cartItem;
+package library.libCartMicroservice.cartItem;
 
-import book.BookDTO;
+import library.libCartMicroservice.book.BookDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class CartItemDTO {
+public class CartItemResponseDTO {
     private BookDTO book;
     private Integer quantity;
 }

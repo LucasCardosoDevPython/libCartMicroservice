@@ -1,6 +1,6 @@
-package cart;
+package library.libCartMicroservice.cart;
 
-import cartItem.CartItem;
+import library.libCartMicroservice.cartItem.CartItem;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,8 +12,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -21,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name="cart")
+@Table(name= "cart")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -32,6 +30,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "CartSeq")
     @SequenceGenerator(name = "CartSeq", sequenceName = "cart_id_generator", allocationSize = 1)
     private Integer id;
+    @Column(name = "client_id")
     private Integer client;
     @Column(name = "trans_date")
     private LocalDate tranDate;

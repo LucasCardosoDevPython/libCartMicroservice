@@ -1,13 +1,10 @@
-package book;
+package library.libCartMicroservice.book;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Optional;
-
-@FeignClient(url = "localhost:8082/book")
+@FeignClient(url = "localhost:8082/book", name = "bookMicroservice")
 public interface BookRepository {
     @GetMapping("/{isbn}")
     BookDTO findBookById(@RequestParam("isbn") String isbn);

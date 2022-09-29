@@ -1,6 +1,6 @@
-package cartItem;
+package library.libCartMicroservice.cartItem;
 
-import cart.Cart;
+import library.libCartMicroservice.cart.Cart;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -16,7 +15,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import java.awt.print.Book;
 
 @Entity
 @Table(name="cart_item")
@@ -33,6 +31,7 @@ public class CartItem {
     @ManyToOne
     @JoinColumn(name = "cart_id")
     private Cart cart;
+    @Column(name = "book_id")
     private String book;
     private Integer quantity;
 

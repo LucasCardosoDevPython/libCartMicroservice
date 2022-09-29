@@ -1,7 +1,9 @@
-package cart;
+package library.libCartMicroservice.cart;
 
-import cart.v1.CartService;
+import library.libCartMicroservice.cart.v1.CartService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/cart")
+@EnableFeignClients(basePackages = "library.libCartMicroservice")
 @AllArgsConstructor
 public class CartController {
 
