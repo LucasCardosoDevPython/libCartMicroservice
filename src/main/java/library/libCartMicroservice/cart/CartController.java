@@ -2,7 +2,6 @@ package library.libCartMicroservice.cart;
 
 import library.libCartMicroservice.cart.v1.CartService;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;

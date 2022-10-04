@@ -170,6 +170,9 @@ public class CartServiceImplementation implements CartService{
                 .map(existentCart -> {
                     cart.setId(existentCart.getId());
                     carts.save(cart);
+                    for(CartItem i: cart.getCartItems()){
+                        items.save(i);
+                    }
                     return existentCart;
                 }).orElseThrow(()-> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
