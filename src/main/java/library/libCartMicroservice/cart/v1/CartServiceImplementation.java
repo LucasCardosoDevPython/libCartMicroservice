@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -39,14 +40,13 @@ public class CartServiceImplementation implements CartService{
     }
 
     private double loadItemTotal(CartItem item){
-        return books.findBookPrice(item.getBook())*item.getQuantity();
+        return books.findBookPrice(item.getBookId())*item.getQuantity();
     }
 
     public CartResponseDTO toCartResponseDTO(Cart cart){
-        LinkedList<CartItemResponseDTO> items;
+        LinkedList<CartItemResponseDTO> items = new LinkedList<CartItemResponseDTO>();
         boolean done;
         done = cart.getDone() != 0;
-        items = new LinkedList<CartItemResponseDTO>();
         for(CartItem i: cart.getCartItems()){
             items.add(toItemDTO(i));
         }
@@ -60,6 +60,12 @@ public class CartServiceImplementation implements CartService{
     }
 
     private Cart fromCartRequestDTO(CartRequestDTO inDTO){
+        if(!clients.isPresent(inDTO.getClientId())){
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Não foi encontrado nenhum cliente com o id "+inDTO.getClientId()+" na base de dados."
+            );
+        }
         int done;
         if(inDTO.isDone()){
             done = 1;
@@ -70,27 +76,76 @@ public class CartServiceImplementation implements CartService{
                 .client(inDTO.getClientId())
                 .done(done)
                 .tranDate(LocalDate.now())
-                .cartItems(new LinkedList<CartItem>())
+                .items(new HashMap<String, CartItem>())
                 .build();
         for(CartItemRequestDTO i: inDTO.getItems()){
-            cart.getCartItems().add(this.fromItemDTO(i, cart));
+            cart.addCartItem(this.fromItemDTO(i, cart));
+        };
+        return cart;
+    }
+
+    private Cart fromCartUpdateRequestDTO(CartRequestDTO inDTO, Integer cartId){
+        if(!clients.isPresent(inDTO.getClientId())){
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Não foi encontrado nenhum cliente com o id "+inDTO.getClientId()+" na base de dados."
+            );
+        }
+        int done;
+        if(inDTO.isDone()){
+            done = 1;
+        }else{
+            done = 0;
+        }
+        Cart cart = Cart.builder()
+                .id(cartId)
+                .client(inDTO.getClientId())
+                .done(done)
+                .tranDate(LocalDate.now())
+                .items(new HashMap<String, CartItem>())
+                .build();
+        for(CartItemRequestDTO i: inDTO.getItems()){
+            cart.addCartItem(this.fromItemDTO(i, cart));
         };
         return cart;
     }
 
     public CartItemResponseDTO toItemDTO(CartItem item){
         return new CartItemResponseDTO(
-                books.findBookById(item.getBook()),
+                books.findBookById(item.getBookId()),
                 item.getQuantity()
         );
     }
 
     private CartItem fromItemDTO(CartItemRequestDTO itemDTO, Cart cart){
+        if(!books.isPresent(itemDTO.getBookId())){
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Não foi encontrado nenhum cliente com o id "+itemDTO.getBookId()+" na base de dados."
+            );
+        }
+        if(itemDTO.getQuantity()<0){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A quantidade de um item não pode ser menor que 0. "+
+                            "Livro: "+itemDTO.getBookId()+", "+
+                            "Quantidade: "+itemDTO.getQuantity()
+            );
+        }
         return CartItem.builder()
-                .book(itemDTO.getBookId())
+                .bookId(itemDTO.getBookId())
                 .quantity(itemDTO.getQuantity())
                 .cart(cart)
                 .build();
+    }
+
+    private Cart getCartFromId(Integer cartId){
+        return carts
+                .findById(cartId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Não foi encontrada nenhuma compra com o id " + cartId + " na base de dados."
+                ));
     }
 
     @Override
@@ -111,12 +166,7 @@ public class CartServiceImplementation implements CartService{
     @Override
     @Transactional
     public CartResponseDTO findCartById(Integer id) {
-        Cart cart = carts
-                .findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Não foi encontrada nenhuma compra com o id " + id + " na base de dados."
-                ));
+        Cart cart = this.getCartFromId(id);
 
         return this.toCartResponseDTO(cart);
     }
@@ -149,12 +199,7 @@ public class CartServiceImplementation implements CartService{
     @Transactional
     public void delete(Integer id) {
 
-        Cart cart = carts
-                .findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Não foi encontrada nenhuma compra com o id " + id + " na base de dados."
-                ));
+        Cart cart = this.getCartFromId(id);
         for(CartItem i: cart.getCartItems()){
             items.delete(i);
         }
@@ -163,20 +208,64 @@ public class CartServiceImplementation implements CartService{
 
     @Override
     @Transactional
-    public void update(Integer id, CartRequestDTO cartDTO) {
-        Cart cart = this.fromCartRequestDTO(cartDTO);
-        carts
-                .findById(id)
-                .map(existentCart -> {
-                    cart.setId(existentCart.getId());
-                    carts.save(cart);
-                    for(CartItem i: cart.getCartItems()){
-                        items.save(i);
-                    }
-                    return existentCart;
-                }).orElseThrow(()-> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Não foi encontrada nenhuma compra com o id "+id+" na base de dados."
-                ));
+    public void update(Integer cartId, CartRequestDTO cartDTO) {
+        Cart oldCart = this.getCartFromId(cartId);
+        Cart newCart = this.fromCartUpdateRequestDTO(cartDTO, cartId);
+        newCart.setId(oldCart.getId());
+        CartItem oldItem;
+        for(CartItem newItem: newCart.getCartItems()){
+            if(oldCart.containsBook(newItem.getBookId())){
+                oldItem = oldCart.getItem(newItem.getBookId());
+                newItem.setId(oldItem.getId());
+                newItem.setQuantity(
+                        oldItem.getQuantity() + newItem.getQuantity()
+                );
+            }
+            items.save(newItem);
+        }
+        carts.save(newCart);
+    }
+
+    @Override
+    @Transactional
+    public void addItem(Integer cartId, CartItemRequestDTO itemDTO) {
+        Cart oldCart = this.getCartFromId(cartId);
+        CartItem newItem = this.fromItemDTO(itemDTO, oldCart);
+        if(oldCart.containsBook(newItem.getBookId())){
+            CartItem oldItem = oldCart.getItem(newItem.getBookId());
+            newItem.setId(oldItem.getId());
+            newItem.setQuantity(
+                    oldItem.getQuantity() + newItem.getQuantity()
+            );
+        }
+        items.save(newItem);
+    }
+
+    @Override
+    @Transactional
+    public void removeItem(Integer cartId, CartItemRequestDTO itemDTO) {
+        Cart oldCart = this.getCartFromId(cartId);
+        if (oldCart.containsBook(itemDTO.getBookId())) {
+            if(itemDTO.getQuantity()==0){
+                items.delete(oldCart.getItem(itemDTO.getBookId()));
+            }else{
+                CartItem newItem = this.fromItemDTO(itemDTO, oldCart);
+                CartItem oldItem = oldCart.getItem(newItem.getBookId());
+                newItem.setId(oldItem.getId());
+                newItem.setQuantity(
+                        oldItem.getQuantity() - newItem.getQuantity()
+                );
+                if (newItem.getQuantity() <= 0) {
+                    items.delete(newItem);
+                } else {
+                    items.save(newItem);
+                }
+            }
+        }else{
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A compra " + oldCart.getId() + " já não possui o libro de ID " + itemDTO.getBookId()
+            );
+        }
     }
 }

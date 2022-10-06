@@ -11,4 +11,7 @@ public interface BookRepository {
 
     @GetMapping("/price_finder/{isbn}")
     double findBookPrice(@RequestParam("isbn") String isbn);
+
+    @GetMapping("/verify/{isbn}")
+    boolean isPresent(@RequestParam("isbn") String isbn);
 }

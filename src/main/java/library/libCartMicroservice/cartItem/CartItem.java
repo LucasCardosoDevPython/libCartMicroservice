@@ -15,6 +15,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import java.util.Objects;
 
 @Entity
 @Table(name="cart_item")
@@ -32,8 +33,10 @@ public class CartItem {
     @JoinColumn(name = "cart_id")
     private Cart cart;
     @Column(name = "book_id")
-    private String book;
+    private String bookId;
     private Integer quantity;
+
+
 
 }
 

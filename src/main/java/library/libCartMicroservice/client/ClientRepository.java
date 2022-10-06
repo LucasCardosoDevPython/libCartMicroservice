@@ -8,4 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface ClientRepository {
     @GetMapping(value = "/{id}")
     ClientDTO findById(@RequestParam("id") Integer clientId);
+
+    @GetMapping("/verify/{id}")
+    boolean isPresent(@RequestParam("id") Integer clientId);
 }

@@ -1,6 +1,7 @@
 package library.libCartMicroservice.cart;
 
 import library.libCartMicroservice.cart.v1.CartService;
+import library.libCartMicroservice.cartItem.CartItemRequestDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ public class CartController {
 
     @GetMapping
     public List<CartResponseDTO> findAllCarts(){
+
         return service.findAllCarts();
     }
 
@@ -56,6 +58,18 @@ public class CartController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void update(@PathVariable("id") Integer id, @RequestBody CartRequestDTO cart){
         service.update(id,cart);
+    }
+
+    @PutMapping("/items/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addItem(@PathVariable("id") Integer id, @RequestBody CartItemRequestDTO itemDTO){
+        service.addItem(id, itemDTO);
+    }
+
+    @PutMapping("/items/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeItem(@PathVariable("id") Integer id, @RequestBody CartItemRequestDTO itemDTO){
+        service.removeItem(id, itemDTO);
     }
 
 }

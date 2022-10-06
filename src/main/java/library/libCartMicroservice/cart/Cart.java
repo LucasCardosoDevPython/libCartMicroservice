@@ -17,6 +17,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name= "cart")
@@ -36,7 +37,27 @@ public class Cart {
     private LocalDate tranDate;
     private Integer done;
     @OneToMany(mappedBy = "cart",fetch = FetchType.EAGER)
-    private List<CartItem> cartItems;
+    private Map<String, CartItem> items;
+
+    public void addCartItem(CartItem item){
+        items.put(item.getBookId(), item);
+    }
+
+    public void removeCartItem(CartItem item){
+        items.remove(item.getBookId());
+    }
+
+    public List<CartItem> getCartItems(){
+        return (List<CartItem>) this.items.values();
+    }
+
+    public boolean containsBook(String bookId){
+        return this.items.containsKey(bookId);
+    }
+
+    public CartItem getItem(String bookId){
+        return this.items.get(bookId);
+    }
 
 }
 
