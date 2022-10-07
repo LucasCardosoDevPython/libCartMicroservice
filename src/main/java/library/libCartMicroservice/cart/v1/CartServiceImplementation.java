@@ -12,15 +12,15 @@ import library.libCartMicroservice.cartItem.CartItemRequestDTO;
 import library.libCartMicroservice.cartItem.CartItemResponseDTO;
 import library.libCartMicroservice.client.ClientRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -28,35 +28,35 @@ public class CartServiceImplementation implements CartService{
 
     private CartRepository carts;
     private CartItemRepository items;
-    private BookRepository books;
-    private ClientRepository clients;
+    private static BookRepository books;
+    private static ClientRepository clients;
 
-    private double loadCartTotal(Cart cart){
+    private static double loadCartTotal(Cart cart){
         double total = 0;
         for(CartItem item: cart.getCartItems()){
-            total+= this.loadItemTotal(item);
+            total+= loadItemTotal(item);
         }
         return total;
     }
 
-    private double loadItemTotal(CartItem item){
+    private static double loadItemTotal(CartItem item){
         return books.findBookPrice(item.getBookId())*item.getQuantity();
     }
 
-    public CartResponseDTO toCartResponseDTO(Cart cart){
+    public static CartResponseDTO toCartResponseDTO(Cart cart){
         LinkedList<CartItemResponseDTO> items = new LinkedList<CartItemResponseDTO>();
         boolean done;
         done = cart.getDone() != 0;
         for(CartItem i: cart.getCartItems()){
             items.add(toItemDTO(i));
         }
-        return new CartResponseDTO(
-                clients.findById(cart.getClient()),
-                done,
-                cart.getTranDate(),
-                items,
-                this.loadCartTotal(cart)
-        );
+        return CartResponseDTO.builder()
+                .client(clients.findById(cart.getClient()))
+                .done(done)
+                .tranDate(cart.getTranDate())
+                .items(items)
+                .total(loadCartTotal(cart))
+                .build();
     }
 
     private Cart fromCartRequestDTO(CartRequestDTO inDTO){
@@ -76,7 +76,6 @@ public class CartServiceImplementation implements CartService{
                 .client(inDTO.getClientId())
                 .done(done)
                 .tranDate(LocalDate.now())
-                .items(new HashMap<String, CartItem>())
                 .build();
         for(CartItemRequestDTO i: inDTO.getItems()){
             cart.addCartItem(this.fromItemDTO(i, cart));
@@ -102,7 +101,6 @@ public class CartServiceImplementation implements CartService{
                 .client(inDTO.getClientId())
                 .done(done)
                 .tranDate(LocalDate.now())
-                .items(new HashMap<String, CartItem>())
                 .build();
         for(CartItemRequestDTO i: inDTO.getItems()){
             cart.addCartItem(this.fromItemDTO(i, cart));
@@ -110,11 +108,11 @@ public class CartServiceImplementation implements CartService{
         return cart;
     }
 
-    public CartItemResponseDTO toItemDTO(CartItem item){
-        return new CartItemResponseDTO(
-                books.findBookById(item.getBookId()),
-                item.getQuantity()
-        );
+    public static CartItemResponseDTO toItemDTO(CartItem item){
+        return CartItemResponseDTO.builder()
+                .book(books.findBookById(item.getBookId()))
+                .quantity(item.getQuantity())
+                .build();
     }
 
     private CartItem fromItemDTO(CartItemRequestDTO itemDTO, Cart cart){
@@ -139,6 +137,10 @@ public class CartServiceImplementation implements CartService{
                 .build();
     }
 
+    private Page<CartResponseDTO> fromPage(Page<Cart> page){
+        return page.map(CartServiceImplementation::toCartResponseDTO);
+    }
+
     private Cart getCartFromId(Integer cartId){
         return carts
                 .findById(cartId)
@@ -150,17 +152,8 @@ public class CartServiceImplementation implements CartService{
 
     @Override
     @Transactional
-    public List<CartResponseDTO> findAllCarts() {
-
-        List<Cart> all = carts.findAll();
-
-        LinkedList<CartResponseDTO> allOut = new LinkedList<CartResponseDTO>();
-
-        for(Cart k: all){
-            allOut.add(this.toCartResponseDTO(k));
-        }
-
-        return allOut;
+    public Page<CartResponseDTO> findAllCarts(Pageable pageable) {
+        return this.fromPage(carts.findAll(pageable));
     }
 
     @Override
@@ -173,15 +166,8 @@ public class CartServiceImplementation implements CartService{
 
     @Override
     @Transactional
-    public List<CartResponseDTO> findCartsByClientId(Integer id) {
-
-        LinkedList<CartResponseDTO> allOut = new LinkedList<CartResponseDTO>();
-
-        for(Cart k: carts.findCartsByClientId(id)){
-            allOut.add(this.toCartResponseDTO(k));
-        }
-
-        return allOut;
+    public Page<CartResponseDTO> findCartsByClientId(Integer id, Pageable pageable) {
+        return this.fromPage(carts.findCartsByClientId(id, pageable));
     }
 
     @Override

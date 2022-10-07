@@ -1,5 +1,6 @@
 package library.libCartMicroservice.cart;
 
+import library.libCartMicroservice.book.BookRepository;
 import library.libCartMicroservice.cartItem.CartItem;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +39,14 @@ public class Cart {
     private Integer done;
     @OneToMany(mappedBy = "cart",fetch = FetchType.EAGER)
     private Map<String, CartItem> items;
+
+    public double getTotal(BookRepository books){
+        double total = 0;
+        for(CartItem item: this.getCartItems()){
+            total+= item.getTotal(books);
+        }
+        return total;
+    }
 
     public void addCartItem(CartItem item){
         items.put(item.getBookId(), item);

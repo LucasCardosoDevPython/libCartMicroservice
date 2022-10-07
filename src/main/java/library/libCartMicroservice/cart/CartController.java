@@ -4,6 +4,8 @@ import library.libCartMicroservice.cart.v1.CartService;
 import library.libCartMicroservice.cartItem.CartItemRequestDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping(value = "/cart")
 @EnableFeignClients(basePackages = "library.libCartMicroservice")
@@ -26,9 +26,8 @@ public class CartController {
     private CartService service;
 
     @GetMapping
-    public List<CartResponseDTO> findAllCarts(){
-
-        return service.findAllCarts();
+    public Page<CartResponseDTO> findAllCarts(Pageable pageable){
+        return service.findAllCarts(pageable);
     }
 
     @GetMapping("/{id}")
@@ -37,8 +36,8 @@ public class CartController {
     }
 
     @GetMapping("/client/{id}")
-    public List<CartResponseDTO> findCartsByClientId(@PathVariable("id") Integer id){
-        return service.findCartsByClientId(id);
+    public Page<CartResponseDTO> findCartsByClientId(@PathVariable("id") Integer id, Pageable pageable){
+        return service.findCartsByClientId(id, pageable);
     }
 
     @PostMapping
