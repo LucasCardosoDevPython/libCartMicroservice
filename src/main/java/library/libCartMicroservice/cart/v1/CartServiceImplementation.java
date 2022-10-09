@@ -11,7 +11,7 @@ import library.libCartMicroservice.cartItem.CartItemRepository;
 import library.libCartMicroservice.cartItem.CartItemRequestDTO;
 import library.libCartMicroservice.cartItem.CartItemResponseDTO;
 import library.libCartMicroservice.client.ClientRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,38 +20,38 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CartServiceImplementation implements CartService{
 
-    private CartRepository carts;
-    private CartItemRepository items;
-    private static BookRepository books;
-    private static ClientRepository clients;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final BookRepository bookRepository;
+    private final ClientRepository clientRepository;
 
-    private static double loadCartTotal(Cart cart){
+    private double loadCartTotal(Cart cart){
         double total = 0;
-        for(CartItem item: cart.getCartItems()){
+        for(CartItem item: cart.getItems()){
             total+= loadItemTotal(item);
         }
         return total;
     }
 
-    private static double loadItemTotal(CartItem item){
-        return books.findBookPrice(item.getBookId())*item.getQuantity();
+    private double loadItemTotal(CartItem item){
+        return bookRepository.findBookPrice(item.getBookId())*item.getQuantity();
     }
 
-    public static CartResponseDTO toCartResponseDTO(Cart cart){
+    public CartResponseDTO toCartResponseDTO(Cart cart){
         LinkedList<CartItemResponseDTO> items = new LinkedList<CartItemResponseDTO>();
-        boolean done;
-        done = cart.getDone() != 0;
-        for(CartItem i: cart.getCartItems()){
+        boolean done = cart.getDone() != 0;
+        for(CartItem i: cart.getItems()){
             items.add(toItemDTO(i));
         }
         return CartResponseDTO.builder()
-                .client(clients.findById(cart.getClient()))
+                .client(clientRepository.findById(cart.getClient()))
                 .done(done)
                 .tranDate(cart.getTranDate())
                 .items(items)
@@ -59,13 +59,19 @@ public class CartServiceImplementation implements CartService{
                 .build();
     }
 
-    private Cart fromCartRequestDTO(CartRequestDTO inDTO){
-        if(!clients.isPresent(inDTO.getClientId())){
+    private void verifyClientAndBooks(CartRequestDTO inDTO){
+        if(!clientRepository.isPresent(inDTO.getClientId())){
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Não foi encontrado nenhum cliente com o id "+inDTO.getClientId()+" na base de dados."
             );
         }
+        for(CartItemRequestDTO i: inDTO.getItems()){
+            this.verifyBookExistence(i.getBookId());
+        }
+    }
+
+    private Cart fromCartRequestDTO(CartRequestDTO inDTO){
         int done;
         if(inDTO.isDone()){
             done = 1;
@@ -76,6 +82,7 @@ public class CartServiceImplementation implements CartService{
                 .client(inDTO.getClientId())
                 .done(done)
                 .tranDate(LocalDate.now())
+                .items(new LinkedList<>())
                 .build();
         for(CartItemRequestDTO i: inDTO.getItems()){
             cart.addCartItem(this.fromItemDTO(i, cart));
@@ -84,7 +91,7 @@ public class CartServiceImplementation implements CartService{
     }
 
     private Cart fromCartUpdateRequestDTO(CartRequestDTO inDTO, Integer cartId){
-        if(!clients.isPresent(inDTO.getClientId())){
+        if(!clientRepository.isPresent(inDTO.getClientId())){
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Não foi encontrado nenhum cliente com o id "+inDTO.getClientId()+" na base de dados."
@@ -108,20 +115,23 @@ public class CartServiceImplementation implements CartService{
         return cart;
     }
 
-    public static CartItemResponseDTO toItemDTO(CartItem item){
+    public CartItemResponseDTO toItemDTO(CartItem item){
         return CartItemResponseDTO.builder()
-                .book(books.findBookById(item.getBookId()))
+                .book(bookRepository.findBookById(item.getBookId()))
                 .quantity(item.getQuantity())
                 .build();
     }
 
-    private CartItem fromItemDTO(CartItemRequestDTO itemDTO, Cart cart){
-        if(!books.isPresent(itemDTO.getBookId())){
+    private void verifyBookExistence(String bookId){
+        if(!bookRepository.isPresent(bookId)){
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Não foi encontrado nenhum cliente com o id "+itemDTO.getBookId()+" na base de dados."
+                    "Não foi encontrado nenhum cliente com o id "+bookId+" na base de dados."
             );
         }
+    }
+
+    private CartItem fromItemDTO(CartItemRequestDTO itemDTO, Cart cart){
         if(itemDTO.getQuantity()<0){
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -138,11 +148,11 @@ public class CartServiceImplementation implements CartService{
     }
 
     private Page<CartResponseDTO> fromPage(Page<Cart> page){
-        return page.map(CartServiceImplementation::toCartResponseDTO);
-    }
+        return page.map(cart -> this.toCartResponseDTO(cart));
+    }//CartServiceImplementation::toCartResponseDTO
 
     private Cart getCartFromId(Integer cartId){
-        return carts
+        return cartRepository
                 .findById(cartId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -153,30 +163,30 @@ public class CartServiceImplementation implements CartService{
     @Override
     @Transactional
     public Page<CartResponseDTO> findAllCarts(Pageable pageable) {
-        return this.fromPage(carts.findAll(pageable));
+        return this.fromPage(cartRepository.findAll(pageable));
     }
 
     @Override
     @Transactional
     public CartResponseDTO findCartById(Integer id) {
         Cart cart = this.getCartFromId(id);
-
         return this.toCartResponseDTO(cart);
     }
 
     @Override
     @Transactional
     public Page<CartResponseDTO> findCartsByClientId(Integer id, Pageable pageable) {
-        return this.fromPage(carts.findCartsByClientId(id, pageable));
+        return this.fromPage(cartRepository.findCartsByClientId(id, pageable));
     }
 
     @Override
     @Transactional
     public Cart save(CartRequestDTO cartDTO) {
+        this.verifyClientAndBooks(cartDTO);
         Cart cart = this.fromCartRequestDTO(cartDTO);
-        cart = carts.save(cart);
-        for(CartItem i: cart.getCartItems()){
-            items.save(i);
+        cart = cartRepository.save(cart);
+        for(CartItem i: cart.getItems()){
+            cartItemRepository.save(i);
         }
         return cart;
     }
@@ -186,10 +196,10 @@ public class CartServiceImplementation implements CartService{
     public void delete(Integer id) {
 
         Cart cart = this.getCartFromId(id);
-        for(CartItem i: cart.getCartItems()){
-            items.delete(i);
+        for(CartItem i: cart.getItems()){
+            cartItemRepository.delete(i);
         }
-        carts.delete(cart);
+        cartRepository.delete(cart);
     }
 
     @Override
@@ -199,7 +209,7 @@ public class CartServiceImplementation implements CartService{
         Cart newCart = this.fromCartUpdateRequestDTO(cartDTO, cartId);
         newCart.setId(oldCart.getId());
         CartItem oldItem;
-        for(CartItem newItem: newCart.getCartItems()){
+        for(CartItem newItem: newCart.getItems()){
             if(oldCart.containsBook(newItem.getBookId())){
                 oldItem = oldCart.getItem(newItem.getBookId());
                 newItem.setId(oldItem.getId());
@@ -207,15 +217,16 @@ public class CartServiceImplementation implements CartService{
                         oldItem.getQuantity() + newItem.getQuantity()
                 );
             }
-            items.save(newItem);
+            cartItemRepository.save(newItem);
         }
-        carts.save(newCart);
+        cartRepository.save(newCart);
     }
 
     @Override
     @Transactional
     public void addItem(Integer cartId, CartItemRequestDTO itemDTO) {
         Cart oldCart = this.getCartFromId(cartId);
+        this.verifyBookExistence(itemDTO.getBookId());
         CartItem newItem = this.fromItemDTO(itemDTO, oldCart);
         if(oldCart.containsBook(newItem.getBookId())){
             CartItem oldItem = oldCart.getItem(newItem.getBookId());
@@ -224,7 +235,7 @@ public class CartServiceImplementation implements CartService{
                     oldItem.getQuantity() + newItem.getQuantity()
             );
         }
-        items.save(newItem);
+        cartItemRepository.save(newItem);
     }
 
     @Override
@@ -233,8 +244,9 @@ public class CartServiceImplementation implements CartService{
         Cart oldCart = this.getCartFromId(cartId);
         if (oldCart.containsBook(itemDTO.getBookId())) {
             if(itemDTO.getQuantity()==0){
-                items.delete(oldCart.getItem(itemDTO.getBookId()));
+                cartItemRepository.delete(oldCart.getItem(itemDTO.getBookId()));
             }else{
+                this.verifyBookExistence(itemDTO.getBookId());
                 CartItem newItem = this.fromItemDTO(itemDTO, oldCart);
                 CartItem oldItem = oldCart.getItem(newItem.getBookId());
                 newItem.setId(oldItem.getId());
@@ -242,9 +254,9 @@ public class CartServiceImplementation implements CartService{
                         oldItem.getQuantity() - newItem.getQuantity()
                 );
                 if (newItem.getQuantity() <= 0) {
-                    items.delete(newItem);
+                    cartItemRepository.delete(newItem);
                 } else {
-                    items.save(newItem);
+                    cartItemRepository.save(newItem);
                 }
             }
         }else{

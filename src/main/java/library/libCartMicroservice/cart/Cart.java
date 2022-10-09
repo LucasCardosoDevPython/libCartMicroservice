@@ -38,34 +38,32 @@ public class Cart {
     private LocalDate tranDate;
     private Integer done;
     @OneToMany(mappedBy = "cart",fetch = FetchType.EAGER)
-    private Map<String, CartItem> items;
-
-    public double getTotal(BookRepository books){
-        double total = 0;
-        for(CartItem item: this.getCartItems()){
-            total+= item.getTotal(books);
-        }
-        return total;
-    }
+    private List<CartItem> items;
 
     public void addCartItem(CartItem item){
-        items.put(item.getBookId(), item);
+        items.add(item);
     }
 
     public void removeCartItem(CartItem item){
         items.remove(item.getBookId());
     }
 
-    public List<CartItem> getCartItems(){
-        return (List<CartItem>) this.items.values();
-    }
-
     public boolean containsBook(String bookId){
-        return this.items.containsKey(bookId);
+        for(CartItem item: items){
+            if(item.getBookId() == bookId){
+                return true;
+            }
+        }
+        return false;
     }
 
     public CartItem getItem(String bookId){
-        return this.items.get(bookId);
+        for(CartItem item: items){
+            if(item.getBookId() == bookId){
+                return item;
+            }
+        }
+        throw new RuntimeException("O cart "+id+" não possui nenhum item que contenha o livro "+bookId);
     }
 
 }

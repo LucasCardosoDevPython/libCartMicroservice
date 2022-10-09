@@ -37,9 +37,5 @@ public class CartItem {
     private String bookId;
     private Integer quantity;
 
-    public double getTotal(BookRepository books){
-        return books.findBookPrice(bookId)*quantity;
-    }
-
 }
 

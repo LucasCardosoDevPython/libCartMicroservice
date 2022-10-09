@@ -43,7 +43,6 @@ public class CartController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Integer save(@RequestBody CartRequestDTO cart){
-
         return service.save(cart).getId();
     }
 
@@ -65,7 +64,7 @@ public class CartController {
         service.addItem(id, itemDTO);
     }
 
-    @PutMapping("/items/{id}")
+    @DeleteMapping("/items/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeItem(@PathVariable("id") Integer id, @RequestBody CartItemRequestDTO itemDTO){
         service.removeItem(id, itemDTO);
