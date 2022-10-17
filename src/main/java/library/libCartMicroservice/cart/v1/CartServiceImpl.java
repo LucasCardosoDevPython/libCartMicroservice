@@ -20,12 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 @Service
 @RequiredArgsConstructor
-public class CartServiceImplementation implements CartService{
+public class CartServiceImpl implements CartService{
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
@@ -176,19 +175,19 @@ public class CartServiceImplementation implements CartService{
     @Override
     @Transactional
     public Page<CartResponseDTO> findCartsByClientId(Integer id, Pageable pageable) {
-        return this.fromPage(cartRepository.findCartsByClientId(id, pageable));
+        return this.fromPage(cartRepository.findByClient(id, pageable));
     }
 
     @Override
     @Transactional
-    public Cart save(CartRequestDTO cartDTO) {
+    public Integer save(CartRequestDTO cartDTO) {
         this.verifyClientAndBooks(cartDTO);
         Cart cart = this.fromCartRequestDTO(cartDTO);
         cart = cartRepository.save(cart);
         for(CartItem i: cart.getItems()){
             cartItemRepository.save(i);
         }
-        return cart;
+        return cart.getId();
     }
 
     @Override

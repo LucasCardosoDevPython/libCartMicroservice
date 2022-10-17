@@ -1,44 +1,48 @@
 package library.libCartMicroservice;
 
 import library.libCartMicroservice.cart.CartController;
-import library.libCartMicroservice.cart.CartRequestDTO;
-import library.libCartMicroservice.cart.v1.CartService;
-import library.libCartMicroservice.cart.v1.CartServiceImplementation;
+import library.libCartMicroservice.cart.v1.CartServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static library.libCartMicroservice.builders.CartBuilders.createBasicSaveCart;
-import static library.libCartMicroservice.builders.CartBuilders.createBasicSaveCartRequestDTO;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-@ExtendWith(MockitoExtension.class)
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @Tag("cotroller")
 @DisplayName("Valida os endpoints relacionados a compras")
+@ExtendWith(SpringExtension.class)
+@WebMvcTest(controllers = CartController.class)
 public class LibCartMicroserviceControllerTests {
 
-    @Mock
-    private CartService cartService;
+    @MockBean
+    private CartServiceImpl cartService;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @InjectMocks
-    private CartController cartController;
-
+    private static String readJson(String file) throws Exception {
+        byte[] bytes = Files.readAllBytes(
+                Paths.get("src/test/resources/requestJsons/" + file).toAbsolutePath());
+        return new String(bytes);
+    }
     @Test
     @DisplayName("Deve salvar uma compra e retornar o id dela")
-    void shouldSaveCart(){
-        when(cartService.save(any(CartRequestDTO.class)))
-                .thenReturn(createBasicSaveCart());
-        //
-        int savedCartId = cartController.save(createBasicSaveCartRequestDTO());
-        //
-        assertThat(savedCartId, is(900));
+    void shouldSaveCart() throws  Exception{
+        mockMvc.perform(post("/cart")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(readJson("simple_cart_save.json")))
+                .andExpect(status().isCreated());
+
     }
 
 }

@@ -11,7 +11,7 @@ public interface CartService {
     Page<CartResponseDTO> findAllCarts(Pageable pageable);
     CartResponseDTO findCartById(Integer id);
     Page<CartResponseDTO> findCartsByClientId(Integer id, Pageable pageable);
-    Cart save(CartRequestDTO cartDTO);
+    Integer save(CartRequestDTO cartDTO);
     void delete(Integer id);
     void update(Integer id, CartRequestDTO cartDTO);
     void addItem(Integer cartId, CartItemRequestDTO itemDTO);

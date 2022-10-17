@@ -50,7 +50,7 @@ public class Cart {
 
     public boolean containsBook(String bookId){
         for(CartItem item: items){
-            if(item.getBookId() == bookId){
+            if(item.getBookId().equals(bookId)){
                 return true;
             }
         }
@@ -59,7 +59,7 @@ public class Cart {
 
     public CartItem getItem(String bookId){
         for(CartItem item: items){
-            if(item.getBookId() == bookId){
+            if(item.getBookId().equals(bookId)){
                 return item;
             }
         }

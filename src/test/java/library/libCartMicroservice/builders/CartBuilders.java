@@ -2,8 +2,10 @@ package library.libCartMicroservice.builders;
 
 import library.libCartMicroservice.cart.Cart;
 import library.libCartMicroservice.cart.CartRequestDTO;
+import library.libCartMicroservice.cart.CartResponseDTO;
 import library.libCartMicroservice.cartItem.CartItem;
 import library.libCartMicroservice.cartItem.CartItemRequestDTO;
+import library.libCartMicroservice.cartItem.CartItemResponseDTO;
 
 import javax.swing.text.html.Option;
 import java.time.LocalDate;
@@ -14,6 +16,7 @@ import static library.libCartMicroservice.builders.CartItemBuilders.createBasicS
 import static library.libCartMicroservice.builders.CartItemBuilders.createBasicSaveCartItemRequestDTO;
 import static library.libCartMicroservice.builders.CartItemBuilders.createCartItemRequestDTOWithInvalidBook;
 import static library.libCartMicroservice.builders.CartItemBuilders.createMultipleCartItems;
+import static library.libCartMicroservice.builders.ClientBuilders.createClient1;
 
 public class CartBuilders {
     public static Cart createBasicSaveCart(){
@@ -33,6 +36,15 @@ public class CartBuilders {
         itemsDTOList.add(createBasicSaveCartItemRequestDTO());
         return CartRequestDTO.builder()
                 .clientId(1)
+                .done(false)
+                .items(itemsDTOList)
+                .build();
+    }
+
+    public static CartResponseDTO createBasicSaveCartResponseDTO(){
+        LinkedList<CartItemResponseDTO> itemsDTOList = new LinkedList<>();
+        return CartResponseDTO.builder()
+                .client(createClient1())
                 .done(false)
                 .items(itemsDTOList)
                 .build();

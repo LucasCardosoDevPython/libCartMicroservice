@@ -1,13 +1,10 @@
 package library.libCartMicroservice;
 
 import library.libCartMicroservice.book.BookRepository;
-import library.libCartMicroservice.builders.BookBuilders;
-import library.libCartMicroservice.builders.CartBuilders;
-import library.libCartMicroservice.builders.ClientBuilders;
 import library.libCartMicroservice.cart.Cart;
 import library.libCartMicroservice.cart.CartRepository;
 import library.libCartMicroservice.cart.CartResponseDTO;
-import library.libCartMicroservice.cart.v1.CartServiceImplementation;
+import library.libCartMicroservice.cart.v1.CartServiceImpl;
 import library.libCartMicroservice.cartItem.CartItem;
 import library.libCartMicroservice.cartItem.CartItemRepository;
 import library.libCartMicroservice.client.ClientRepository;
@@ -29,13 +26,11 @@ import static library.libCartMicroservice.builders.CartBuilders.createCartWithIt
 import static library.libCartMicroservice.builders.CartBuilders.createCartWithMultipleItems;
 import static library.libCartMicroservice.builders.CartBuilders.createCartWithoutItems;
 import static library.libCartMicroservice.builders.CartBuilders.createEmptyCartOptional;
-import static library.libCartMicroservice.builders.CartItemBuilders.createBasicSaveCartItem;
 import static library.libCartMicroservice.builders.CartItemBuilders.createBasicSaveCartItemRequestDTO;
 import static library.libCartMicroservice.builders.ClientBuilders.createClient1;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -59,7 +54,7 @@ class LibCartMicroserviceServiceTests {
 	@Mock
 	private ClientRepository clientRepository;
 	@InjectMocks
-	private CartServiceImplementation cartService;
+	private CartServiceImpl cartService;
 
 	@Test
 	@DisplayName("Deve salvar uma compra")
@@ -72,16 +67,11 @@ class LibCartMicroserviceServiceTests {
 				.thenReturn(createBasicSaveCart());
 		ArgumentCaptor<CartItem> cartItemCapture = ArgumentCaptor.forClass(CartItem.class);
 		//
-		Cart savedCart = cartService.save(createBasicSaveCartRequestDTO());
+		Integer savedCartId = cartService.save(createBasicSaveCartRequestDTO());
 		//
 		verify(itemRepository).save(cartItemCapture.capture());
 		CartItem savedItem = cartItemCapture.getValue();
-		assertAll("Cart",
-				() -> assertThat(savedCart.getId(), is(900)),
-				() -> assertThat(savedCart.getClient(), is(1)),
-				() -> assertThat(savedCart.getDone(), is(0)),
-				() -> assertNotNull(savedCart.getTranDate())
-		);
+		assertThat(savedCartId, is(900));
 		assertAll("Item",
 				() -> assertThat(savedItem.getId(), is(901)),
 				() -> assertThat(savedItem.getBookId(), is("0000000000001")),

@@ -1,0 +1,24 @@
+logging:
+  level:
+    root: INFO
+
+spring:
+  cloud:
+    service-registry:
+      auto-registration:
+        enabled: false
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: admin
+    password: admin
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+eureka:
+  client:
+    enabled: false
