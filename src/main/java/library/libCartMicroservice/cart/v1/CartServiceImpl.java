@@ -50,9 +50,10 @@ public class CartServiceImpl implements CartService{
             items.add(toItemDTO(i));
         }
         return CartResponseDTO.builder()
+                .id(cart.getId())
                 .client(clientRepository.findById(cart.getClient()))
                 .done(done)
-                .tranDate(cart.getTranDate())
+                .transDate(cart.getTransDate())
                 .items(items)
                 .total(loadCartTotal(cart))
                 .build();
@@ -80,7 +81,7 @@ public class CartServiceImpl implements CartService{
         Cart cart = Cart.builder()
                 .client(inDTO.getClientId())
                 .done(done)
-                .tranDate(LocalDate.now())
+                .transDate(LocalDate.now())
                 .items(new LinkedList<>())
                 .build();
         for(CartItemRequestDTO i: inDTO.getItems()){
@@ -106,7 +107,8 @@ public class CartServiceImpl implements CartService{
                 .id(cartId)
                 .client(inDTO.getClientId())
                 .done(done)
-                .tranDate(LocalDate.now())
+                .transDate(LocalDate.now())
+                .items(new LinkedList<CartItem>())
                 .build();
         for(CartItemRequestDTO i: inDTO.getItems()){
             cart.addCartItem(this.fromItemDTO(i, cart));
@@ -116,6 +118,7 @@ public class CartServiceImpl implements CartService{
 
     public CartItemResponseDTO toItemDTO(CartItem item){
         return CartItemResponseDTO.builder()
+                .id(item.getId())
                 .book(bookRepository.findBookById(item.getBookId()))
                 .quantity(item.getQuantity())
                 .build();
@@ -140,6 +143,7 @@ public class CartServiceImpl implements CartService{
             );
         }
         return CartItem.builder()
+                .id(itemDTO.getId())
                 .bookId(itemDTO.getBookId())
                 .quantity(itemDTO.getQuantity())
                 .cart(cart)
@@ -206,19 +210,23 @@ public class CartServiceImpl implements CartService{
     public void update(Integer cartId, CartRequestDTO cartDTO) {
         Cart oldCart = this.getCartFromId(cartId);
         Cart newCart = this.fromCartUpdateRequestDTO(cartDTO, cartId);
-        newCart.setId(oldCart.getId());
-        CartItem oldItem;
-        for(CartItem newItem: newCart.getItems()){
-            if(oldCart.containsBook(newItem.getBookId())){
-                oldItem = oldCart.getItem(newItem.getBookId());
-                newItem.setId(oldItem.getId());
-                newItem.setQuantity(
-                        oldItem.getQuantity() + newItem.getQuantity()
-                );
+        oldCart.setDone(newCart.getDone());
+        for(CartItem item: newCart.getItems()){
+            if(item.getId() != null){
+                if(item.getQuantity() <=0){
+                    this.cartItemRepository.delete(item);
+                    oldCart.removeCartItem(item);
+                }else{
+                    this.cartItemRepository.save(item);
+                }
+            }else {
+                if(item.getQuantity() > 0) {
+                    this.cartItemRepository.save(item);
+                    oldCart.addCartItem(item);
+                }
             }
-            cartItemRepository.save(newItem);
         }
-        cartRepository.save(newCart);
+        cartRepository.save(oldCart);
     }
 
     @Override

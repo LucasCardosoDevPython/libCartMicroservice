@@ -12,13 +12,15 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class CartItemResponseDTO {
+    private Integer id;
     private BookDTO book;
     private Integer quantity;
 
     public static CartItemResponseDTO toDTO(CartItem item, BookRepository books){
-        return new CartItemResponseDTO(
-                books.findBookById(item.getBookId()),
-                item.getQuantity()
-        );
+        return CartItemResponseDTO.builder()
+                .id(item.getId())
+                .book(books.findBookById(item.getBookId()))
+                .quantity(item.getQuantity())
+                .build();
     }
 }

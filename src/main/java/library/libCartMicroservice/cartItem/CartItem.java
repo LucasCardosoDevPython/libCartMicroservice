@@ -37,5 +37,7 @@ public class CartItem {
     private String bookId;
     private Integer quantity;
 
+
+
 }
 

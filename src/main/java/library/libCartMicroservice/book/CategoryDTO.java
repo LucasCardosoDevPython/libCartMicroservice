@@ -1,4 +1,4 @@
-package library.libCartMicroservice.cartItem;
+package library.libCartMicroservice.book;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class CartItemRequestDTO {
+public class CategoryDTO {
     private Integer id;
-    private String bookId;
-    private Integer quantity;
+    private String name;
 }

@@ -19,5 +19,5 @@ public class BookDTO {
     private Integer year;
     private Double price;
     private Integer stock;
-    private List<String> categories;
+    private List<CategoryDTO> categories;
 }

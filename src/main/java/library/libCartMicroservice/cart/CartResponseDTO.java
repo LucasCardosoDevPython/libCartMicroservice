@@ -15,9 +15,10 @@ import java.util.List;
 @Data
 @Builder
 public class CartResponseDTO {
+    private Integer id;
     private ClientDTO client;
     private boolean done;
-    private LocalDate tranDate;
+    private LocalDate transDate;
     private List<CartItemResponseDTO> items;
     private double total;
 }

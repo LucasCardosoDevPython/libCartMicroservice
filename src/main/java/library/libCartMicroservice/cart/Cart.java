@@ -35,7 +35,7 @@ public class Cart {
     @Column(name = "client_id")
     private Integer client;
     @Column(name = "trans_date")
-    private LocalDate tranDate;
+    private LocalDate transDate;
     private Integer done;
     @OneToMany(mappedBy = "cart",fetch = FetchType.EAGER)
     private List<CartItem> items;
